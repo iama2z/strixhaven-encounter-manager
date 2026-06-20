@@ -1,0 +1,33 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Require authentication for all access
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if isAuthenticated();
+      // Enforce schema: active_encounter_id must be a string if it exists
+      allow write: if isAuthenticated() 
+                   && (!request.resource.data.keys().hasAny(['active_encounter_id']) 
+                       || request.resource.data.active_encounter_id is string);
+    }
+
+    match /encounters/{encounterId} {
+      allow read: if isAuthenticated();
+      // Enforce schema: status, current_turn_index, round, and combatants must be correct types if they exist
+      allow write: if isAuthenticated()
+                   && (!request.resource.data.keys().hasAny(['status']) 
+                       || request.resource.data.status in ['setup', 'active', 'completed'])
+                   && (!request.resource.data.keys().hasAny(['current_turn_index']) 
+                       || request.resource.data.current_turn_index is int)
+                   && (!request.resource.data.keys().hasAny(['round']) 
+                       || request.resource.data.round is int)
+                   && (!request.resource.data.keys().hasAny(['combatants']) 
+                       || request.resource.data.combatants is list);
+    }
+  }
+}
