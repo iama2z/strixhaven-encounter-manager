@@ -46,7 +46,7 @@ abstract class AppTheme {
           bodyMedium: TextStyle(color: textSecondary, fontSize: 13),
           labelSmall: TextStyle(color: textMuted, fontSize: 11),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: surfaceVariant,
           elevation: 0,
           shape: RoundedRectangleBorder(
