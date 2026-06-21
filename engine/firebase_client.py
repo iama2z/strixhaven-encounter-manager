@@ -16,6 +16,7 @@ The Firestore schema used here matches the technical specification:
 from __future__ import annotations
 
 import os
+import random
 from typing import Any
 
 try:
@@ -51,8 +52,10 @@ class FirebaseClient:
                 "the 'credentials_path' constructor argument."
             )
 
-        # Initialise only once (firebase_admin raises if already initialised)
-        if not firebase_admin._apps:
+        # Initialise only once — use the public API instead of the private _apps dict
+        try:
+            firebase_admin.get_app()
+        except ValueError:
             cred = credentials.Certificate(cred_path)
             firebase_admin.initialize_app(cred)
 
@@ -101,7 +104,12 @@ class FirebaseClient:
             }
         )
 
-    def roll_and_push_initiative(self, session_id: str) -> list[dict[str, Any]]:
+    def roll_and_push_initiative(
+        self,
+        session_id: str,
+        *,
+        rng: random.Random | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Full workflow:
           1. Resolve active encounter for the given session.
@@ -112,6 +120,7 @@ class FirebaseClient:
 
         Args:
             session_id: Firestore session document ID.
+            rng:        Optional RNG for reproducibility in tests.
 
         Returns:
             Sorted list of combatant dicts.
@@ -120,6 +129,6 @@ class FirebaseClient:
         encounter = self.get_encounter(encounter_id)
         combatants = encounter.get("combatants", [])
 
-        sorted_combatants = build_turn_order(combatants)
+        sorted_combatants = build_turn_order(combatants, rng=rng)
         self.write_turn_order(encounter_id, sorted_combatants)
         return sorted_combatants

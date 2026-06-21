@@ -121,6 +121,15 @@ class TestSortInitiative:
             results.append(sorted_c[0].name)
         assert all(name == "HighDex" for name in results)
 
+    def test_tiebreakers_are_stable_per_run(self):
+        # Seeded RNG must produce identical ordering across calls
+        c1 = make_combatant("A", initiative=10)
+        c2 = make_combatant("B", initiative=10)
+        c3 = make_combatant("C", initiative=10)
+        run1 = [c.name for c in sort_initiative([c1, c2, c3], rng=random.Random(7))]
+        run2 = [c.name for c in sort_initiative([c1, c2, c3], rng=random.Random(7))]
+        assert run1 == run2
+
     def test_length_preserved(self):
         combatants = [make_combatant(f"C{i}") for i in range(6)]
         result = sort_initiative(combatants)

@@ -27,7 +27,7 @@ class DiceResult(NamedTuple):
     """Holds a detailed breakdown of a single dice roll."""
 
     notation: str
-    rolls: list[int]
+    rolls: tuple[int, ...]
     modifier: int
     total: int
 
@@ -109,6 +109,6 @@ def roll_dice_detailed(notation: str, *, rng: random.Random | None = None) -> Di
     """
     rng = rng or random
     count, sides, modifier = parse_notation(notation)
-    rolls = [rng.randint(1, sides) for _ in range(count)]
+    rolls = tuple(rng.randint(1, sides) for _ in range(count))
     total = sum(rolls) + modifier
     return DiceResult(notation=notation, rolls=rolls, modifier=modifier, total=total)
