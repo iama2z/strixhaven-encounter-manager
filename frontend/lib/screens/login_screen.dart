@@ -50,6 +50,8 @@ class _LoginScreenState extends State<LoginScreen> {
   String _friendlyError(String code) => switch (code) {
         'user-not-found' => 'No account found for that email.',
         'wrong-password' => 'Incorrect password.',
+        // Firebase Auth v9+ normalises these two into invalid-credential
+        'invalid-credential' => 'Incorrect email or password.',
         'invalid-email' => 'Please enter a valid email address.',
         'too-many-requests' => 'Too many attempts. Try again later.',
         _ => 'Sign-in failed. Please try again.',

@@ -10,11 +10,13 @@ import 'login_screen.dart';
 class AuthGate extends StatelessWidget {
   final String encounterId;
   final AuthService authService;
+  final EncounterService encounterService;
 
   const AuthGate({
     super.key,
     required this.encounterId,
     required this.authService,
+    required this.encounterService,
   });
 
   @override
@@ -34,7 +36,7 @@ class AuthGate extends StatelessWidget {
         if (snapshot.data != null) {
           return BattleTimelineScreen(
             encounterId: encounterId,
-            service: EncounterService(),
+            service: encounterService,
           );
         }
 
