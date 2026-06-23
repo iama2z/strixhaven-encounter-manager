@@ -45,39 +45,49 @@ class _BattleTimelineScreenState extends State<BattleTimelineScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: StreamBuilder<Encounter?>(
-        stream: widget.service.watchEncounter(widget.encounterId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppTheme.accent),
-            );
-          }
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF1A1A2E), Color(0xFF16213E), Color(0xFF0F3460)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: StreamBuilder<Encounter?>(
+          stream: widget.service.watchEncounter(widget.encounterId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppTheme.accent),
+              );
+            }
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}',
-                  style: const TextStyle(color: AppTheme.monsterRed)),
-            );
-          }
+            if (snapshot.hasError) {
+              return Center(
+                child: Text('Error: ${snapshot.error}',
+                    style: const TextStyle(color: AppTheme.monsterRed)),
+              );
+            }
 
-          final encounter = snapshot.data;
-          if (encounter == null) {
-            return const Center(
-              child: Text('Encounter not found.',
-                  style: TextStyle(color: AppTheme.textSecondary)),
-            );
-          }
+            final encounter = snapshot.data;
+            if (encounter == null) {
+              return const Center(
+                child: Text('Encounter not found.',
+                    style: TextStyle(color: AppTheme.textSecondary)),
+              );
+            }
 
-          return Column(
-            children: [
-              _buildHeader(encounter),
-              Expanded(child: _buildTimeline(encounter)),
-              _buildControls(encounter),
-            ],
-          );
-        },
+            return SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(encounter),
+                  Expanded(child: _buildTimeline(encounter)),
+                  _buildControls(encounter),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -85,10 +95,16 @@ class _BattleTimelineScreenState extends State<BattleTimelineScreen> {
   Widget _buildHeader(Encounter encounter) {
     final active = encounter.activeCombatant;
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 56, 20, 16),
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        border: Border(bottom: BorderSide(color: AppTheme.border)),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        border: const Border(bottom: BorderSide(color: AppTheme.border)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+          )
+        ],
       ),
       child: Row(
         children: [
@@ -164,10 +180,16 @@ class _BattleTimelineScreenState extends State<BattleTimelineScreen> {
     final isCompleted = encounter.status == 'completed';
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        border: Border(top: BorderSide(color: AppTheme.border)),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        border: const Border(top: BorderSide(color: AppTheme.border)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+          )
+        ],
       ),
       child: Row(
         children: [

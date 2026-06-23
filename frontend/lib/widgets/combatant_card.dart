@@ -45,12 +45,18 @@ class CombatantCard extends StatelessWidget {
         boxShadow: isActive
             ? [
                 BoxShadow(
-                  color: _accentColor.withOpacity(0.25),
-                  blurRadius: 16,
-                  spreadRadius: 2,
+                  color: _accentColor.withOpacity(0.35),
+                  blurRadius: 20,
+                  spreadRadius: 4,
                 )
               ]
-            : [],
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                )
+              ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -141,6 +147,21 @@ class CombatantCard extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
+              if (combatant.statusEffects.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 4,
+                  children: combatant.statusEffects.map((e) => Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accent.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: AppTheme.accent.withOpacity(0.4)),
+                    ),
+                    child: Text(e, style: const TextStyle(fontSize: 9, color: AppTheme.textPrimary)),
+                  )).toList(),
+                ),
+              ],
             ],
           ),
         ),

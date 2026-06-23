@@ -41,6 +41,7 @@ class Combatant:
     current_hp: int
     dex_modifier: int = 0
     initiative: int | None = None   # None until rolled
+    status_effects: list[str] = field(default_factory=list)
 
     # ---------- factory ----------
     @classmethod
@@ -53,6 +54,7 @@ class Combatant:
             current_hp=int(data.get("current_hp", 0)),
             dex_modifier=int(data.get("dex_modifier", 0)),
             initiative=data.get("initiative"),
+            status_effects=data.get("status_effects", []),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -64,8 +66,8 @@ class Combatant:
             "current_hp": self.current_hp,
             "dex_modifier": self.dex_modifier,
             "initiative": self.initiative,
+            "status_effects": self.status_effects,
         }
-
 
 # ---------------------------------------------------------------------------
 # Core functions

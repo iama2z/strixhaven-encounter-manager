@@ -8,6 +8,7 @@ class Combatant {
   final int initiative;
   final int maxHp;
   final int currentHp;
+  final List<String> statusEffects;
 
   const Combatant({
     required this.id,
@@ -16,6 +17,7 @@ class Combatant {
     required this.initiative,
     required this.maxHp,
     required this.currentHp,
+    this.statusEffects = const [],
   });
 
   bool get isPlayer => type == 'player';
@@ -31,6 +33,10 @@ class Combatant {
       initiative: (map['initiative'] as num?)?.toInt() ?? 0,
       maxHp: (map['max_hp'] as num?)?.toInt() ?? 0,
       currentHp: (map['current_hp'] as num?)?.toInt() ?? 0,
+      statusEffects: (map['status_effects'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
     );
   }
 
@@ -41,15 +47,17 @@ class Combatant {
         'initiative': initiative,
         'max_hp': maxHp,
         'current_hp': currentHp,
+        'status_effects': statusEffects,
       };
 
-  Combatant copyWith({int? currentHp}) => Combatant(
+  Combatant copyWith({int? currentHp, List<String>? statusEffects}) => Combatant(
         id: id,
         name: name,
         type: type,
         initiative: initiative,
         maxHp: maxHp,
         currentHp: currentHp ?? this.currentHp,
+        statusEffects: statusEffects ?? this.statusEffects,
       );
 }
 
