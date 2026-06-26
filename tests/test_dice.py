@@ -114,6 +114,7 @@ class TestRollDiceDetailed:
         rng = random.Random(0)
         result = roll_dice_detailed("3d8", rng=rng)
         assert len(result.rolls) == 3
+        assert isinstance(result.rolls, tuple)
 
     def test_total_equals_sum_plus_modifier(self):
         rng = random.Random(7)

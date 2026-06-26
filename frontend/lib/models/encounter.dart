@@ -5,9 +5,12 @@ class Combatant {
   final String id;
   final String name;
   final String type; // 'player' | 'monster'
-  final int initiative;
+  /// Null until the Python engine has rolled initiative for this combatant.
+  final int? initiative;
   final int maxHp;
   final int currentHp;
+  /// Used by the engine for tie-breaking; carried through to the UI for display.
+  final int dexModifier;
 
   const Combatant({
     required this.id,
@@ -16,6 +19,7 @@ class Combatant {
     required this.initiative,
     required this.maxHp,
     required this.currentHp,
+    this.dexModifier = 0,
   });
 
   bool get isPlayer => type == 'player';
@@ -28,9 +32,10 @@ class Combatant {
       id: map['id'] as String? ?? '',
       name: map['name'] as String? ?? 'Unknown',
       type: map['type'] as String? ?? 'player',
-      initiative: (map['initiative'] as num?)?.toInt() ?? 0,
+      initiative: (map['initiative'] as num?)?.toInt(),
       maxHp: (map['max_hp'] as num?)?.toInt() ?? 0,
       currentHp: (map['current_hp'] as num?)?.toInt() ?? 0,
+      dexModifier: (map['dex_modifier'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -41,6 +46,7 @@ class Combatant {
         'initiative': initiative,
         'max_hp': maxHp,
         'current_hp': currentHp,
+        'dex_modifier': dexModifier,
       };
 
   Combatant copyWith({int? currentHp}) => Combatant(
@@ -50,6 +56,7 @@ class Combatant {
         initiative: initiative,
         maxHp: maxHp,
         currentHp: currentHp ?? this.currentHp,
+        dexModifier: dexModifier,
       );
 }
 
@@ -75,7 +82,7 @@ class Encounter {
           : null;
 
   factory Encounter.fromSnapshot(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    final data = doc.data() as Map<String, dynamic>? ?? {};
     final rawCombatants = data['combatants'] as List<dynamic>? ?? [];
     return Encounter(
       id: doc.id,

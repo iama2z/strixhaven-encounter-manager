@@ -8,6 +8,8 @@ class CombatantCard extends StatelessWidget {
   final bool isActive;
   final VoidCallback onHpIncrease;
   final VoidCallback onHpDecrease;
+  /// Callback for custom HP adjustment (e.g. opens a dialog for arbitrary delta).
+  final VoidCallback? onHpCustomAdjust;
 
   const CombatantCard({
     super.key,
@@ -15,6 +17,7 @@ class CombatantCard extends StatelessWidget {
     required this.isActive,
     required this.onHpIncrease,
     required this.onHpDecrease,
+    this.onHpCustomAdjust,
   });
 
   Color get _accentColor =>
@@ -22,6 +25,10 @@ class CombatantCard extends StatelessWidget {
 
   Color get _dimColor =>
       combatant.isPlayer ? AppTheme.playerGreenDim : AppTheme.monsterRedDim;
+
+  /// Displays the initiative value, or '?' if the engine hasn't rolled yet.
+  String get _initiativeLabel =>
+      combatant.initiative != null ? '${combatant.initiative}' : '?';
 
   Color get _hpColor {
     final pct = combatant.hpPercent;
@@ -45,7 +52,7 @@ class CombatantCard extends StatelessWidget {
         boxShadow: isActive
             ? [
                 BoxShadow(
-                  color: _accentColor.withOpacity(0.25),
+                  color: _accentColor.withValues(alpha: 0.25),
                   blurRadius: 16,
                   spreadRadius: 2,
                 )
@@ -76,13 +83,13 @@ class CombatantCard extends StatelessWidget {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: _accentColor.withOpacity(0.15),
+            color: _accentColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: _accentColor.withOpacity(0.4)),
+            border: Border.all(color: _accentColor.withValues(alpha: 0.4)),
           ),
           child: Center(
             child: Text(
-              '${combatant.initiative}',
+              _initiativeLabel,
               style: TextStyle(
                 color: _accentColor,
                 fontSize: 16,
@@ -136,7 +143,7 @@ class CombatantCard extends StatelessWidget {
               Text(
                 combatant.isPlayer ? '⚔ Player' : '☠ Monster',
                 style: TextStyle(
-                  color: _accentColor.withOpacity(0.7),
+                  color: _accentColor.withValues(alpha: 0.7),
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                 ),
@@ -189,6 +196,16 @@ class CombatantCard extends StatelessWidget {
           onPressed: combatant.currentHp > 0 ? onHpDecrease : null,
         ),
         const SizedBox(width: 6),
+        // Custom delta button — opens a dialog in the parent screen
+        if (onHpCustomAdjust != null) ...[
+          _HpButton(
+            icon: Icons.edit_outlined,
+            color: AppTheme.textSecondary,
+            onPressed: onHpCustomAdjust,
+            tooltip: 'Custom adjust',
+          ),
+          const SizedBox(width: 6),
+        ],
         _HpButton(
           icon: Icons.add,
           color: AppTheme.playerGreen,
@@ -204,16 +221,18 @@ class _HpButton extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback? onPressed;
+  final String? tooltip;
 
   const _HpButton({
     required this.icon,
     required this.color,
     this.onPressed,
+    this.tooltip,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final button = GestureDetector(
       onTap: onPressed,
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 150),
@@ -222,13 +241,18 @@ class _HpButton extends StatelessWidget {
           width: 30,
           height: 30,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: color.withOpacity(0.5)),
+            border: Border.all(color: color.withValues(alpha: 0.5)),
           ),
           child: Icon(icon, color: color, size: 16),
         ),
       ),
     );
+
+    if (tooltip != null) {
+      return Tooltip(message: tooltip!, child: button);
+    }
+    return button;
   }
 }

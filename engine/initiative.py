@@ -97,7 +97,7 @@ def sort_initiative(
 
     Tie-breaking rules (in order):
       1. Higher dex_modifier wins.
-      2. Re-roll a d20 for tied combatants (recursive until resolved).
+      2. Re-roll a d20 for tied combatants (random tiebreaker).
          The re-roll result is ephemeral and does NOT update combatant.initiative.
 
     Args:
@@ -116,11 +116,15 @@ def sort_initiative(
         if c.initiative is None:
             roll_initiative(c, rng=rng)
 
+    # Pre-compute tiebreaker rolls once per combatant so the sort key
+    # function is pure and each combatant receives a stable random value.
+    tiebreakers = {id(c): rng.randint(1, 20) for c in working}
+
     def _sort_key(c: Combatant) -> tuple[int, int, int]:
         # Primary: initiative (higher = first → negate for ascending sort)
         # Secondary: dex modifier (higher = first)
-        # Tertiary: random tiebreaker roll (stored temporarily)
-        return (-c.initiative, -c.dex_modifier, rng.randint(1, 20) * -1)
+        # Tertiary: pre-computed random tiebreaker
+        return (-c.initiative, -c.dex_modifier, -tiebreakers[id(c)])
 
     working.sort(key=_sort_key)
     return working

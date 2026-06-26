@@ -32,13 +32,107 @@ class _BattleTimelineScreenState extends State<BattleTimelineScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: const Text('Something went wrong. Please try again.'),
             backgroundColor: AppTheme.monsterRed,
           ),
         );
+        debugPrint('BattleTimelineScreen error: $e');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _confirmEndEncounter(Encounter encounter) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text(
+          'End Encounter?',
+          style: TextStyle(color: AppTheme.textPrimary),
+        ),
+        content: const Text(
+          'This will mark the encounter as completed. Are you sure?',
+          style: TextStyle(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel',
+                style: TextStyle(color: AppTheme.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('End',
+                style: TextStyle(color: AppTheme.monsterRed)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await _run(() => widget.service.endEncounter(encounter.id));
+    }
+  }
+
+  /// Shows a dialog prompting the user for an HP delta (positive = heal,
+  /// negative = damage). Returns null if the user cancelled.
+  Future<void> _showAdjustHpDialog(
+      Encounter encounter, String combatantId) async {
+    final controller = TextEditingController();
+    final delta = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text(
+          'Adjust HP',
+          style: TextStyle(color: AppTheme.textPrimary),
+        ),
+        content: TextField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(
+              signed: true, decimal: false),
+          autofocus: true,
+          style: const TextStyle(color: AppTheme.textPrimary),
+          decoration: InputDecoration(
+            hintText: 'e.g. -8 for damage, +5 for healing',
+            hintStyle: const TextStyle(color: AppTheme.textMuted),
+            filled: true,
+            fillColor: AppTheme.surfaceVariant,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppTheme.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppTheme.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppTheme.accent),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: const Text('Cancel',
+                style: TextStyle(color: AppTheme.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () {
+              final value = int.tryParse(controller.text.trim());
+              Navigator.of(ctx).pop(value);
+            },
+            child: const Text('Apply',
+                style: TextStyle(color: AppTheme.accent)),
+          ),
+        ],
+      ),
+    );
+    if (delta != null && delta != 0) {
+      await _run(
+          () => widget.service.adjustHp(encounter, combatantId, delta));
     }
   }
 
@@ -153,6 +247,8 @@ class _BattleTimelineScreenState extends State<BattleTimelineScreen> {
           onHpDecrease: () => _run(
             () => widget.service.adjustHp(encounter, combatant.id, -1),
           ),
+          onHpCustomAdjust: () =>
+              _showAdjustHpDialog(encounter, combatant.id),
         );
       },
     );
@@ -209,14 +305,13 @@ class _BattleTimelineScreenState extends State<BattleTimelineScreen> {
 
           const Spacer(),
 
-          // End encounter
+          // End encounter — requires confirmation
           _ControlButton(
             icon: Icons.stop_rounded,
             label: 'End',
             color: AppTheme.monsterRed,
             onPressed: isActive
-                ? () => _run(
-                    () => widget.service.endEncounter(encounter.id))
+                ? () => _confirmEndEncounter(encounter)
                 : null,
           ),
         ],
@@ -243,9 +338,9 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
         label,
@@ -284,9 +379,9 @@ class _ControlButton extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: color.withOpacity(0.3)),
+                border: Border.all(color: color.withValues(alpha: 0.3)),
               ),
               child: Icon(icon, color: color, size: 22),
             ),
@@ -323,12 +418,12 @@ class _PrimaryButton extends StatelessWidget {
             const EdgeInsets.symmetric(horizontal: 24, vertical: 13),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color, color.withOpacity(0.7)],
+            colors: [color, color.withValues(alpha: 0.7)],
           ),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.35),
+              color: color.withValues(alpha: 0.35),
               blurRadius: 12,
               spreadRadius: 1,
             ),

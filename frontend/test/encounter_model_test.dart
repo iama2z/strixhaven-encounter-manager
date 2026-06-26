@@ -54,6 +54,13 @@ void main() {
       expect(c.hpPercent, 0.0);
     });
 
+    test('initiative can be null (not yet rolled)', () {
+      const c = Combatant(
+          id: 'u', name: 'Unrolled', type: 'player',
+          initiative: null, maxHp: 20, currentHp: 20);
+      expect(c.initiative, isNull);
+    });
+
     test('fromMap deserialises correctly', () {
       final map = {
         'id': 'p2',
@@ -62,6 +69,7 @@ void main() {
         'initiative': 15,
         'max_hp': 38,
         'current_hp': 30,
+        'dex_modifier': 3,
       };
       final c = Combatant.fromMap(map);
       expect(c.id, 'p2');
@@ -69,6 +77,12 @@ void main() {
       expect(c.initiative, 15);
       expect(c.maxHp, 38);
       expect(c.currentHp, 30);
+      expect(c.dexModifier, 3);
+    });
+
+    test('fromMap returns null initiative when key is absent', () {
+      final c = Combatant.fromMap({'id': 'x', 'name': 'Unknown'});
+      expect(c.initiative, isNull);
     });
 
     test('toMap round-trips correctly', () {
@@ -89,8 +103,8 @@ void main() {
     test('fromMap provides safe defaults for missing keys', () {
       final c = Combatant.fromMap({'id': 'x', 'name': 'Unknown'});
       expect(c.type, 'player');
-      expect(c.initiative, 0);
       expect(c.maxHp, 0);
+      expect(c.dexModifier, 0);
     });
   });
 }

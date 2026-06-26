@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 import 'services/auth_service.dart';
+import 'services/encounter_service.dart';
 import 'theme/app_theme.dart';
 import 'widgets/auth_gate.dart';
 
@@ -33,6 +34,7 @@ class StrixhavenApp extends StatelessWidget {
       home: AuthGate(
         encounterId: _encounterId,
         authService: AuthService(),
+        encounterService: EncounterService(),
       ),
     );
   }
