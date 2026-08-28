@@ -158,9 +158,27 @@ class _BattleTimelineScreenState extends State<BattleTimelineScreen> {
 
           final encounter = snapshot.data;
           if (encounter == null) {
-            return const Center(
-              child: Text('Encounter not found.',
-                  style: TextStyle(color: AppTheme.textSecondary)),
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Encounter not found.',
+                      style: TextStyle(color: AppTheme.textSecondary),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () => _run(() => widget.service
+                              .createEncounterIfMissing(widget.encounterId)),
+                      child: const Text('Create Encounter'),
+                    ),
+                  ],
+                ),
+              ),
             );
           }
 

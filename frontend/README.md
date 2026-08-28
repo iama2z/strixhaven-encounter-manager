@@ -24,6 +24,20 @@ frontend/
 
 ## Running
 
+### Browser-only (no local setup)
+
+Use the deployed site:
+
+`https://iama2z.github.io/strixhaven-encounter-manager/`
+
+1. Open the site in your browser.
+2. Create an account from the login form (or sign in if you already have one).
+3. If the configured encounter does not exist yet, click **Create Encounter** in-app.
+
+No command-line setup is required for these steps.
+
+### Local development
+
 1. Add your `google-services.json` (Android) or `GoogleService-Info.plist` (iOS) from Firebase console to the appropriate platform folder.
 
 2. Install dependencies:

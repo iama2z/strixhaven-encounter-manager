@@ -67,6 +67,57 @@ class EncounterService {
         .update({'status': 'completed'});
   }
 
+  Future<void> createEncounterIfMissing(String encounterId) async {
+    final encounterRef = _db.collection('encounters').doc(encounterId);
+    await _db.runTransaction((tx) async {
+      final snapshot = await tx.get(encounterRef);
+      if (snapshot.exists) return;
+      tx.set(encounterRef, {
+        'status': 'setup',
+        'current_turn_index': 0,
+        'round': 1,
+        'combatants': [
+          {
+            'id': 'pc-1',
+            'name': 'Mage Student',
+            'type': 'player',
+            'initiative': 15,
+            'max_hp': 24,
+            'current_hp': 24,
+            'dex_modifier': 2,
+          },
+          {
+            'id': 'pc-2',
+            'name': 'Arcane Archer',
+            'type': 'player',
+            'initiative': 13,
+            'max_hp': 28,
+            'current_hp': 28,
+            'dex_modifier': 1,
+          },
+          {
+            'id': 'mon-1',
+            'name': 'Animated Armor',
+            'type': 'monster',
+            'initiative': 12,
+            'max_hp': 33,
+            'current_hp': 33,
+            'dex_modifier': 0,
+          },
+          {
+            'id': 'mon-2',
+            'name': 'Pest Swarm',
+            'type': 'monster',
+            'initiative': 10,
+            'max_hp': 18,
+            'current_hp': 18,
+            'dex_modifier': 1,
+          },
+        ],
+      });
+    });
+  }
+
   // ---------------------------------------------------------------------------
   // HP management
   // ---------------------------------------------------------------------------
