@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/encounter_service.dart';
 import '../theme/app_theme.dart';
-import 'battle_timeline_screen.dart';
-import 'login_screen.dart';
+import '../screens/battle_timeline_screen.dart';
+import '../screens/login_screen.dart';
 
 /// Listens to Firebase auth state and routes to either the login screen
 /// or the main encounter screen.
