@@ -20,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _isSignUp = false;
   String? _errorMessage;
+  String? _infoMessage;
 
   @override
   void dispose() {
@@ -33,6 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _infoMessage = null;
     });
     try {
       final email = _emailController.text.trim();
@@ -51,6 +53,37 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _sendSetupEmail() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      setState(() => _errorMessage = 'Enter your email first.');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _infoMessage = null;
+    });
+
+    try {
+      await widget.authService.sendPasswordResetEmail(email);
+      if (!mounted) return;
+      setState(() {
+        _infoMessage =
+            'If this email is registered, a setup/reset link has been sent.';
+      });
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _errorMessage = _friendlyResetError(e.code));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _errorMessage = 'Unable to send setup email right now.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   String _friendlyError(String code, {required bool signUp}) {
     if (signUp) {
       return switch (code) {
@@ -58,6 +91,14 @@ class _LoginScreenState extends State<LoginScreen> {
         'weak-password' => 'Password must be at least 6 characters.',
         'invalid-email' => 'Please enter a valid email address.',
         _ => 'Sign-up failed. Please try again.',
+      };
+    }
+
+    String _friendlyResetError(String code) {
+      return switch (code) {
+        'invalid-email' => 'Please enter a valid email address.',
+        'too-many-requests' => 'Too many requests. Try again later.',
+        _ => 'Unable to send setup email right now.',
       };
     }
     return switch (code) {
@@ -162,6 +203,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         : () => setState(() {
                               _isSignUp = !_isSignUp;
                               _errorMessage = null;
+                              _infoMessage = null;
                             }),
                     child: Text(
                       _isSignUp
@@ -170,6 +212,25 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: const TextStyle(color: AppTheme.textSecondary),
                     ),
                   ),
+                  if (!_isSignUp)
+                    TextButton(
+                      onPressed: _isLoading ? null : _sendSetupEmail,
+                      child: const Text(
+                        'Forgot password or first-time setup?',
+                        style: TextStyle(color: AppTheme.accent),
+                      ),
+                    ),
+                  if (_infoMessage != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _infoMessage!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
