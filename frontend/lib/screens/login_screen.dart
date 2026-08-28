@@ -18,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _isSignUp = false;
   String? _errorMessage;
 
   @override
@@ -27,19 +28,22 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _signIn() async {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
     try {
-      await widget.authService.signIn(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+      if (_isSignUp) {
+        await widget.authService.signUp(email, password);
+      } else {
+        await widget.authService.signIn(email, password);
+      }
     } on FirebaseAuthException catch (e) {
-      setState(() => _errorMessage = _friendlyError(e.code));
+      setState(() => _errorMessage = _friendlyError(e.code, signUp: _isSignUp));
     } catch (e) {
       setState(() => _errorMessage = 'An unexpected error occurred.');
     } finally {
@@ -47,15 +51,25 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  String _friendlyError(String code) => switch (code) {
-        'user-not-found' => 'No account found for that email.',
-        'wrong-password' => 'Incorrect password.',
-        // Firebase Auth v9+ normalises these two into invalid-credential
-        'invalid-credential' => 'Incorrect email or password.',
+  String _friendlyError(String code, {required bool signUp}) {
+    if (signUp) {
+      return switch (code) {
+        'email-already-in-use' => 'That email is already registered.',
+        'weak-password' => 'Password must be at least 6 characters.',
         'invalid-email' => 'Please enter a valid email address.',
-        'too-many-requests' => 'Too many attempts. Try again later.',
-        _ => 'Sign-in failed. Please try again.',
+        _ => 'Sign-up failed. Please try again.',
       };
+    }
+    return switch (code) {
+      'user-not-found' => 'No account found for that email.',
+      'wrong-password' => 'Incorrect password.',
+      // Firebase Auth v9+ normalises these two into invalid-credential
+      'invalid-credential' => 'Incorrect email or password.',
+      'invalid-email' => 'Please enter a valid email address.',
+      'too-many-requests' => 'Too many attempts. Try again later.',
+      _ => 'Sign-in failed. Please try again.',
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _signIn,
+                      onPressed: _isLoading ? null : _submit,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.accent,
                         foregroundColor: Colors.black,
@@ -134,11 +148,26 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: CircularProgressIndicator(
                                   strokeWidth: 2, color: Colors.black),
                             )
-                          : const Text(
-                              'Sign In',
-                              style: TextStyle(
+                          : Text(
+                              _isSignUp ? 'Create Account' : 'Sign In',
+                              style: const TextStyle(
                                   fontWeight: FontWeight.w700, fontSize: 15),
                             ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () => setState(() {
+                              _isSignUp = !_isSignUp;
+                              _errorMessage = null;
+                            }),
+                    child: Text(
+                      _isSignUp
+                          ? 'Already have an account? Sign in'
+                          : 'Need an account? Create one',
+                      style: const TextStyle(color: AppTheme.textSecondary),
                     ),
                   ),
                 ],
