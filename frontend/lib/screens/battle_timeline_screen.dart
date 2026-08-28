@@ -171,12 +171,16 @@ class _BattleTimelineScreenState extends State<BattleTimelineScreen> {
     switch (action) {
       case _BattleMenuAction.setRound:
         await _showSetRoundDialog(encounter);
+        break;
       case _BattleMenuAction.resetTurn:
         await _run(() => widget.service.setCurrentTurnIndex(encounter, 0));
+        break;
       case _BattleMenuAction.resetHp:
         await _run(() => widget.service.resetAllHp(encounter));
+        break;
       case _BattleMenuAction.resetBattle:
         await _confirmResetEncounter(encounter);
+        break;
     }
   }
 
@@ -359,13 +363,6 @@ class _BattleTimelineScreenState extends State<BattleTimelineScreen> {
       );
     }
 
-    enum _BattleMenuAction {
-      setRound,
-      resetTurn,
-      resetHp,
-      resetBattle,
-    }
-
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 12),
       itemCount: encounter.combatants.length,
@@ -453,6 +450,13 @@ class _BattleTimelineScreenState extends State<BattleTimelineScreen> {
       ),
     );
   }
+}
+
+enum _BattleMenuAction {
+  setRound,
+  resetTurn,
+  resetHp,
+  resetBattle,
 }
 
 // ---------------------------------------------------------------------------
