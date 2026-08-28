@@ -67,6 +67,47 @@ class EncounterService {
         .update({'status': 'completed'});
   }
 
+  Future<void> resetEncounter(Encounter encounter) async {
+    final resetCombatants = encounter.combatants
+        .map((c) => c.copyWith(currentHp: c.maxHp).toMap())
+        .toList();
+
+    await _db.collection('encounters').doc(encounter.id).update({
+      'status': 'setup',
+      'current_turn_index': 0,
+      'round': 1,
+      'combatants': resetCombatants,
+    });
+  }
+
+  Future<void> resetAllHp(Encounter encounter) async {
+    final resetCombatants = encounter.combatants
+        .map((c) => c.copyWith(currentHp: c.maxHp).toMap())
+        .toList();
+
+    await _db
+        .collection('encounters')
+        .doc(encounter.id)
+        .update({'combatants': resetCombatants});
+  }
+
+  Future<void> setRound(Encounter encounter, int round) async {
+    final clampedRound = round < 1 ? 1 : round;
+    await _db
+        .collection('encounters')
+        .doc(encounter.id)
+        .update({'round': clampedRound});
+  }
+
+  Future<void> setCurrentTurnIndex(Encounter encounter, int index) async {
+    if (encounter.combatants.isEmpty) return;
+    final clampedIndex = index.clamp(0, encounter.combatants.length - 1);
+    await _db
+        .collection('encounters')
+        .doc(encounter.id)
+        .update({'current_turn_index': clampedIndex});
+  }
+
   Future<void> createEncounterIfMissing(String encounterId) async {
     final encounterRef = _db.collection('encounters').doc(encounterId);
     await _db.runTransaction((tx) async {

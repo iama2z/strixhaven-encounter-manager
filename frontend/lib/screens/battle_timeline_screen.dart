@@ -75,6 +75,111 @@ class _BattleTimelineScreenState extends State<BattleTimelineScreen> {
     }
   }
 
+  Future<void> _confirmResetEncounter(Encounter encounter) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text(
+          'Reset Encounter?',
+          style: TextStyle(color: AppTheme.textPrimary),
+        ),
+        content: const Text(
+          'This will reset the encounter to setup and restore all combatants to full HP.',
+          style: TextStyle(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel',
+                style: TextStyle(color: AppTheme.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Reset',
+                style: TextStyle(color: AppTheme.monsterRed)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await _run(() => widget.service.resetEncounter(encounter));
+    }
+  }
+
+  Future<void> _showSetRoundDialog(Encounter encounter) async {
+    final controller = TextEditingController(text: '${encounter.round}');
+    final round = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text(
+          'Set Round',
+          style: TextStyle(color: AppTheme.textPrimary),
+        ),
+        content: TextField(
+          controller: controller,
+          keyboardType:
+              const TextInputType.numberWithOptions(signed: false, decimal: false),
+          autofocus: true,
+          style: const TextStyle(color: AppTheme.textPrimary),
+          decoration: InputDecoration(
+            hintText: 'Enter round number',
+            hintStyle: const TextStyle(color: AppTheme.textMuted),
+            filled: true,
+            fillColor: AppTheme.surfaceVariant,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppTheme.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppTheme.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppTheme.accent),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: const Text('Cancel',
+                style: TextStyle(color: AppTheme.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () {
+              final value = int.tryParse(controller.text.trim());
+              Navigator.of(ctx).pop(value);
+            },
+            child: const Text('Apply', style: TextStyle(color: AppTheme.accent)),
+          ),
+        ],
+      ),
+    );
+
+    if (round != null && round > 0) {
+      await _run(() => widget.service.setRound(encounter, round));
+    }
+  }
+
+  Future<void> _handleBattleMenuAction(
+    _BattleMenuAction action,
+    Encounter encounter,
+  ) async {
+    switch (action) {
+      case _BattleMenuAction.setRound:
+        await _showSetRoundDialog(encounter);
+      case _BattleMenuAction.resetTurn:
+        await _run(() => widget.service.setCurrentTurnIndex(encounter, 0));
+      case _BattleMenuAction.resetHp:
+        await _run(() => widget.service.resetAllHp(encounter));
+      case _BattleMenuAction.resetBattle:
+        await _confirmResetEncounter(encounter);
+    }
+  }
+
   /// Shows a dialog prompting the user for an HP delta (positive = heal,
   /// negative = damage). Returns null if the user cancelled.
   Future<void> _showAdjustHpDialog(
@@ -236,6 +341,11 @@ class _BattleTimelineScreenState extends State<BattleTimelineScreen> {
           ),
           // Status chip
           _StatusChip(status: encounter.status),
+          const SizedBox(width: 8),
+          _BattleMenuButton(
+            isLoading: _isLoading,
+            onSelected: (action) => _handleBattleMenuAction(action, encounter),
+          ),
         ],
       ),
     );
@@ -247,6 +357,13 @@ class _BattleTimelineScreenState extends State<BattleTimelineScreen> {
         child: Text('No combatants in this encounter.',
             style: TextStyle(color: AppTheme.textSecondary)),
       );
+    }
+
+    enum _BattleMenuAction {
+      setRound,
+      resetTurn,
+      resetHp,
+      resetBattle,
     }
 
     return ListView.builder(
@@ -463,6 +580,50 @@ class _PrimaryButton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _BattleMenuButton extends StatelessWidget {
+  final bool isLoading;
+  final ValueChanged<_BattleMenuAction> onSelected;
+
+  const _BattleMenuButton({
+    required this.isLoading,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<_BattleMenuAction>(
+      enabled: !isLoading,
+      color: AppTheme.surfaceVariant,
+      icon: const Icon(Icons.tune_rounded, color: AppTheme.textSecondary),
+      tooltip: 'Battle menu',
+      onSelected: onSelected,
+      itemBuilder: (_) => const [
+        PopupMenuItem<_BattleMenuAction>(
+          value: _BattleMenuAction.setRound,
+          child: Text('Set round',
+              style: TextStyle(color: AppTheme.textPrimary)),
+        ),
+        PopupMenuItem<_BattleMenuAction>(
+          value: _BattleMenuAction.resetTurn,
+          child: Text('Reset to first turn',
+              style: TextStyle(color: AppTheme.textPrimary)),
+        ),
+        PopupMenuItem<_BattleMenuAction>(
+          value: _BattleMenuAction.resetHp,
+          child: Text('Restore all HP',
+              style: TextStyle(color: AppTheme.textPrimary)),
+        ),
+        PopupMenuDivider(),
+        PopupMenuItem<_BattleMenuAction>(
+          value: _BattleMenuAction.resetBattle,
+          child: Text('Reset battle',
+              style: TextStyle(color: AppTheme.monsterRed)),
+        ),
+      ],
     );
   }
 }
